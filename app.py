@@ -4,6 +4,10 @@ import tornado.ioloop
 import tornado.web
 from twilio import twiml
 import gspread
+from twilio.rest import TwilioRestClient
+
+twilio_sid = "AC7c58ee44ba5745d0942ddbe0238cf7f2"
+twilio_token = "b66cc1f276e50a849da90c9a864cf046"
 
 user = 'sam.machin@gmail.com'
 pw = "mechjkhfxdvbszng"
@@ -39,10 +43,12 @@ class MsgHandler(tornado.web.RequestHandler):
 			gc = gspread.login(user, pw)
 			membersheet = gc.open("smslist").worksheet("members")
 			members = membersheet.row_values(1)
+			members = filter(None, members)
 			r = twiml.Response()
+			client = TwilioRestClient(twilio_sid, twilio_token)
 			for member in members:
-				if member != None:
-					r.message("Test", From="441172001500", To=member)
+					message = client.messages.create(body=text, to_=member, from_="+447903575680")
+					r.message("Mesaage sent to %s recipients" % len(members))
 		else:
 			r = twiml.Response()
 			r.message("Sorry message not recognised")
