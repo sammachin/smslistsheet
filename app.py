@@ -34,7 +34,7 @@ class MsgHandler(tornado.web.RequestHandler):
 	@tornado.web.asynchronous
 	def post(self):
 		text = self.get_argument("Body")
-		sender = self.get_argument("From")
+		sender = self.get_argument("From").lstrip("+")
 		if isadmin(sender):
 			gc = gspread.login(user, pw)
 			membersheet = gc.open("smslist").worksheet("members")
