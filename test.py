@@ -10,9 +10,9 @@ pw = "mechjkhfxdvbszng"
 
 gc = gspread.login(user, pw)
 membersheet = gc.open("smslist").worksheet("members")
-members = membersheet.col_values(1)
-members = filter(None, members)
-client = TwilioRestClient(twilio_sid, twilio_token)
-for member in members:
-	print member
-	message = client.messages.create(body="test", to_=member, from_="+447903575680")
+try:
+	cell = membersheet.find(number)
+	membersheet.update_cell(cell.row, cell.col, '')
+	message = "You have been removed"
+except:
+	message = "Sorry you are not subscribed with this number"
