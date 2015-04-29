@@ -42,7 +42,7 @@ class MsgHandler(tornado.web.RequestHandler):
 		if isadmin(sender):
 			gc = gspread.login(user, pw)
 			membersheet = gc.open("smslist").worksheet("members")
-			members = membersheet.row_values(1)
+			members = membersheet.col_values(1)
 			members = filter(None, members)
 			r = twiml.Response()
 			client = TwilioRestClient(twilio_sid, twilio_token)
