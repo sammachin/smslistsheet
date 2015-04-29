@@ -50,13 +50,13 @@ class MsgHandler(tornado.web.RequestHandler):
 					message = client.messages.create(body=text, to_=member, from_="+447903575680")
 			r.message("Mesaage sent to %s recipients" % len(members))
 		else:
-			if message.split(" ")[0].lower == "join":
+			if text.split(" ")[0].lower == "join":
 				gc = gspread.login(user, pw)
 				membersheet = gc.open("smslist").worksheet("members")
-				name = Body.lower().lstrip("start").lstrip().capitalize()
+				name = text.lower().lstrip("start").lstrip().capitalize()
 				membersheet.append_row([sender, name])
 				r.message("Thankyou, you have been added to the list")
-			elif message.split(" ")[0].lower == "leave":
+			elif text.split(" ")[0].lower == "leave":
 				gc = gspread.login(user, pw)
 				membersheet = gc.open("smslist").worksheet("members")
 				try:
