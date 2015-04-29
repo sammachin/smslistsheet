@@ -48,7 +48,7 @@ class MsgHandler(tornado.web.RequestHandler):
 			client = TwilioRestClient(twilio_sid, twilio_token)
 			for member in members:
 					message = client.messages.create(body=text, to_=member, from_="+447903575680")
-					r.message("Mesaage sent to %s recipients" % len(members))
+			r.message("Mesaage sent to %s recipients" % len(members))
 		else:
 			r = twiml.Response()
 			r.message("Sorry message not recognised")
