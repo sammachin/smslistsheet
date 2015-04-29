@@ -5,6 +5,7 @@ import tornado.web
 from twilio import twiml
 import gspread
 from twilio.rest import TwilioRestClient
+import re
 
 twilio_sid = "AC7c58ee44ba5745d0942ddbe0238cf7f2"
 twilio_token = "b66cc1f276e50a849da90c9a864cf046"
@@ -47,24 +48,24 @@ class MsgHandler(tornado.web.RequestHandler):
 			members = filter(None, members)
 			client = TwilioRestClient(twilio_sid, twilio_token)
 			for member in members:
-					message = client.messages.create(body=text, to_=member, from_="+447903575680")
+				client.messages.create(body=text, to_=member, from_="+447903575680")
 			r.message("Mesaage sent to %s recipients" % len(members))
 		else:
-			if text.split(" ")[0].lower == "join":
+			if re.match("^start*", text.lower()):
 				gc = gspread.login(user, pw)
 				membersheet = gc.open("smslist").worksheet("members")
 				name = text.lower().lstrip("start").lstrip().capitalize()
 				membersheet.append_row([sender, name])
 				r.message("Thankyou, you have been added to the list")
-			elif text.split(" ")[0].lower == "leave":
+			elif re.match("^stop*", text.lower()):
 				gc = gspread.login(user, pw)
 				membersheet = gc.open("smslist").worksheet("members")
 				try:
 					cell = membersheet.find(sender)
 					membersheet.update_cell(cell.row, cell.col, '')
-					r.message = "You have been removed"
+					r.message("You have been removed")
 				except:
-					r.message = "Sorry you are not subscribed with this number"
+					r.message("Sorry you are not subscribed with this number")
 			else:
 				r.message("Sorry message %s not recognised" % text)
 		self.content_type = 'text/xml'
