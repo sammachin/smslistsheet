@@ -32,7 +32,7 @@ class MainHandler(tornado.web.RequestHandler):
 		
 class MsgHandler(tornado.web.RequestHandler):
 	@tornado.web.asynchronous
-	def get(self):
+	def post(self):
 		text = self.get_argument("Body")
 		sender = self.get_argument("From")
 		if isadmin(sender):
