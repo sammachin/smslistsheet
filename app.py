@@ -66,7 +66,7 @@ class MsgHandler(tornado.web.RequestHandler):
 				except:
 					r.message = "Sorry you are not subscribed with this number"
 			else:
-				r.message("Sorry message not recognised")
+				r.message("Sorry message %s not recognised" % text)
 		self.content_type = 'text/xml'
 		self.write(str(r))
 		self.finish()
