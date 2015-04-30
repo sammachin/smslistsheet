@@ -6,25 +6,31 @@ from twilio import twiml
 import gspread
 from twilio.rest import TwilioRestClient
 import re
+import json
+from oauth2client.client import SignedJwtAssertionCredentials
 
-twilio_sid = "AC7c58ee44ba5745d0942ddbe0238cf7f2"
-twilio_token = "b66cc1f276e50a849da90c9a864cf046"
+json_key = json.load(open('creds.json'))
+scope = ['https://spreadsheets.google.com/feeds']
+credentials = SignedJwtAssertionCredentials(json_key['client_email'], json_key['private_key'], scope)
 
-user = 'sam.machin@gmail.com'
-pw = "mechjkhfxdvbszng"
-
-def isadmin(number):
-	gc = gspread.login(user, pw)
-	worksheet = gc.open("smslist").worksheet("admins")
+def isadmin(sender, number):
+	gc = gspread.authorize(credentials)
+	worksheet = gc.open(number).worksheet("admins")
 	try:
-		sender = worksheet.find(number)
+		member = worksheet.find(sender)
 	except:
-		sender = None
-	if sender == None:
+		member = None
+	if member == None:
 		return False
 	else:
 		return True
 
+def get_creds(number):
+	gc = gspread.authorize(credentials)
+	worksheet = gc.open(number).worksheet("creds")
+	creds = worksheet.col_values(2)
+	creds = filter(None, creds)
+	return creds
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -40,26 +46,28 @@ class MsgHandler(tornado.web.RequestHandler):
 	def post(self):
 		text = self.get_argument("Body")
 		sender = self.get_argument("From").lstrip("+")
+		number = self.get_argument("To").lstrip("+")
 		r = twiml.Response()
-		if isadmin(sender):
-			gc = gspread.login(user, pw)
-			membersheet = gc.open("smslist").worksheet("members")
+		if isadmin(sender, number):
+			gc = gspread.authorize(credentials)
+			membersheet = gc.open(number).worksheet("members")
 			members = membersheet.col_values(1)
 			members = filter(None, members)
-			client = TwilioRestClient(twilio_sid, twilio_token)
+			creds = get_creds(number)
+			client = TwilioRestClient(creds[0], creds[1])
 			for member in members:
-				client.messages.create(body=text, to_=member, from_="+447903575680")
+				client.messages.create(body=text, to_=member, from_=number)
 			r.message("Mesaage sent to %s recipients" % len(members))
 		else:
 			if re.match("^start*", text.lower()):
-				gc = gspread.login(user, pw)
-				membersheet = gc.open("smslist").worksheet("members")
+				gc = gspread.authorize(credentials)
+				membersheet = gc.open(number).worksheet("members")
 				name = text.lower().lstrip("start").lstrip().capitalize()
 				membersheet.append_row([sender, name])
 				r.message("Thankyou, you have been added to the list")
 			elif re.match("^stop*", text.lower()):
-				gc = gspread.login(user, pw)
-				membersheet = gc.open("smslist").worksheet("members")
+				gc = gspread.authorize(credentials)
+				membersheet = gc.open(number).worksheet("members")
 				try:
 					cell = membersheet.find(sender)
 					membersheet.update_cell(cell.row, cell.col, '')
