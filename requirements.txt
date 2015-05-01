@@ -3,3 +3,4 @@ wsgiref==0.1.2
 gspread>=0.2.2
 twilio>=3.6.8
 oauth2client>=1.4.7
+pycrypto==2.6.1
