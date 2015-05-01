@@ -90,9 +90,9 @@ class MsgHandler(tornado.web.RequestHandler):
 			self.finish()
 			
 		else:
-			self.content_type = 'text/plain'
-			self.write("INVALID SOURCE")
-			self.finish()
+			self.clear()
+			self.set_status(403)
+			self.finish("<html><body>Invalid Source</body></html>")
 			
 			
 
