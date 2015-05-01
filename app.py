@@ -49,21 +49,20 @@ class MsgHandler(tornado.web.RequestHandler):
 		text = self.get_argument("Body")
 		sender = self.get_argument("From").lstrip("+")
 		number = self.get_argument("To").lstrip("+")
-		r = twiml.Response()
 		signature = self.request.headers.get('X-Twilio-Signature')
-		AUTH_TOKEN = 'b66cc1f276e50a849da90c9a864cf046'
-		validator = RequestValidator(AUTH_TOKEN)
 		url = self.request.uri
 		var = self.request.arguments
+		gc = gspread.authorize(credentials)
 		for x in var:
 			var[x] = ''.join(var[x])
+		membersheet = gc.open(number).worksheet("members")
+		members = membersheet.col_values(1)
+		members = filter(None, members)
+		creds = get_creds(number)
+		validator = RequestValidator(creds[1])
 		if validator.validate(url, var, signature):
+			r = twiml.Response()
 			if isadmin(sender, number):
-				gc = gspread.authorize(credentials)
-				membersheet = gc.open(number).worksheet("members")
-				members = membersheet.col_values(1)
-				members = filter(None, members)
-				creds = get_creds(number)
 				client = TwilioRestClient(creds[0], creds[1])
 				for member in members:
 					client.messages.create(body=text, to_=member, from_=number)
@@ -86,32 +85,14 @@ class MsgHandler(tornado.web.RequestHandler):
 						r.message("Sorry you are not subscribed with this number")
 				else:
 					r.message("Sorry message %s not recognised" % text)
-		else:
-			r = "INVALID"
-		self.content_type = 'text/xml'
-		self.write(str(r))
-		self.finish()
-
-
-class Validate(tornado.web.RequestHandler):
-	@tornado.web.asynchronous
-	def get(self):
-		signature = self.request.headers.get('X-Twilio-Signature')
-		AUTH_TOKEN = 'b66cc1f276e50a849da90c9a864cf046'
-		validator = RequestValidator(AUTH_TOKEN)
-		url = self.request.uri
-		var = self.request.arguments
-		for x in var:
-			var[x] = ''.join(var[x])
-		if validator.validate(url, var, signature):
-			self.content_type = 'text/plain'
-			self.write("Pass")
-			self.finish()
-		else:
-			self.content_type = 'text/plain'
-			self.write("Fail")
+			self.content_type = 'text/xml'
+			self.write(str(r))
 			self.finish()
 			
+		else:
+			self.content_type = 'text/plain'
+			self.write("INVALID SOURCE")
+			self.finish()
 			
 			
 
@@ -120,7 +101,6 @@ def main():
 	print static_path
 	application = tornado.web.Application([(r"/", MainHandler),
 											(r"/message", MsgHandler),
-											(r"/validate", Validate),
 											(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_path}),
 											])
 	http_server = tornado.httpserver.HTTPServer(application)
