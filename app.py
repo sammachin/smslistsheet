@@ -97,7 +97,7 @@ class ValidateHandler(tornado.web.RequestHandler):
 	def post(self):
 		signature = self.request.headers.get('X-Twilio-Signature')
 		print 
-		url = self.request.protocol + "://" + self.request.host + self.request.path
+		url = "https://" + self.request.host + self.request.path
 		var = self.request.arguments
 		for x in var:
 			var[x] = ''.join(var[x])
