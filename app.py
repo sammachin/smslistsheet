@@ -27,6 +27,19 @@ def isadmin(sender, number):
 	else:
 		return True
 
+def ismember(sender, number):
+	gc = gspread.authorize(credentials)
+	worksheet = gc.open(number).worksheet("members")
+	try:
+		member = worksheet.find(sender)
+	except:
+		member = None
+	if member == None:
+		return False
+	else:
+		return True
+		
+		
 def get_creds(number):
 	gc = gspread.authorize(credentials)
 	worksheet = gc.open(number).worksheet("creds")
@@ -82,11 +95,14 @@ class MsgHandler(tornado.web.RequestHandler):
 						membersheet.update_cell(cell.row, cell.col, '')
 						r.message("You have been removed")
 					except:
+						r.message("Sorry you are not subscribed on this number")
+				else:
+					if ismember(sender):
 						gc = gspread.authorize(credentials)
 						membersheet = gc.open(number).worksheet("replies")
 						membersheet.append_row([timestamp('%Y-%m-%d %H:%M:%S'), sender, text])
-				else:
-					r.message("Sorry message %s not recognised" % text)
+					else:
+						r.message("Sorry you are not subscribed to this list")
 			self.content_type = 'text/xml'
 			self.write(str(r))
 			self.finish()
