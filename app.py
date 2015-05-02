@@ -9,7 +9,7 @@ import re
 import json
 from oauth2client.client import SignedJwtAssertionCredentials
 from twilio.util import RequestValidator
-
+from time import strftime as timestamp
 
 json_key = json.load(open('creds.json'))
 scope = ['https://spreadsheets.google.com/feeds']
@@ -82,7 +82,9 @@ class MsgHandler(tornado.web.RequestHandler):
 						membersheet.update_cell(cell.row, cell.col, '')
 						r.message("You have been removed")
 					except:
-						r.message("Sorry you are not subscribed with this number")
+						gc = gspread.authorize(credentials)
+						membersheet = gc.open(number).worksheet("replies")
+						membersheet.append_row([timestamp('%Y-%m-%d %H:%M:%S'), sender, text])
 				else:
 					r.message("Sorry message %s not recognised" % text)
 			self.content_type = 'text/xml'
