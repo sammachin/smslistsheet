@@ -97,7 +97,7 @@ class MsgHandler(tornado.web.RequestHandler):
 					except:
 						r.message("Sorry you are not subscribed on this number")
 				else:
-					if ismember(sender):
+					if ismember(sender, number):
 						gc = gspread.authorize(credentials)
 						membersheet = gc.open(number).worksheet("replies")
 						membersheet.append_row([timestamp('%Y-%m-%d %H:%M:%S'), sender, text])
@@ -113,18 +113,18 @@ class MsgHandler(tornado.web.RequestHandler):
 			
 			
 
-
 class ValidateHandler(tornado.web.RequestHandler):
 	@tornado.web.asynchronous
 	def post(self):
+		number = self.get_argument("To").lstrip("+")
 		signature = self.request.headers.get('X-Twilio-Signature')
 		proto = self.request.headers.get('X-Forwarded-Proto', self.request.protocol ) 
 		url = proto + "://" + self.request.host + self.request.path
 		var = self.request.arguments
 		for x in var:
 			var[x] = ''.join(var[x])
-		token = "b66cc1f276e50a849da90c9a864cf046"
-		validator = RequestValidator(token)
+		creds = get_creds(number)
+		validator = RequestValidator(creds[1])
 		if validator.validate(url, var, signature):
 			r = twiml.Response()
 			r.say("Request Validation Passed")
