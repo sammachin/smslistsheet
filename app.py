@@ -50,14 +50,10 @@ class MsgHandler(tornado.web.RequestHandler):
 		sender = self.get_argument("From").lstrip("+")
 		number = self.get_argument("To").lstrip("+")
 		signature = self.request.headers.get('X-Twilio-Signature')
-		url = self.request.uri
+		url = self.request.protocol + "://" + self.request.host + self.request.path
 		var = self.request.arguments
-		gc = gspread.authorize(credentials)
 		for x in var:
 			var[x] = ''.join(var[x])
-		membersheet = gc.open(number).worksheet("members")
-		members = membersheet.col_values(1)
-		members = filter(None, members)
 		creds = get_creds(number)
 		validator = RequestValidator(creds[1])
 		if validator.validate(url, var, signature):
@@ -88,11 +84,10 @@ class MsgHandler(tornado.web.RequestHandler):
 			self.content_type = 'text/xml'
 			self.write(str(r))
 			self.finish()
-			
 		else:
 			self.clear()
 			self.set_status(403)
-			self.finish("<html><body>Invalid Source</body></html>")
+			self.finish("INVALID SOURCE")
 			
 			
 
