@@ -51,7 +51,7 @@ class MsgHandler(tornado.web.RequestHandler):
 		number = self.get_argument("To").lstrip("+")
 		signature = self.request.headers.get('X-Twilio-Signature')
 		proto = self.request.headers.get('X-Forwarded-Proto', self.request.protocol ) 
-		url = proto + self.request.host + self.request.path
+		url = proto + "://"+ self.request.host + self.request.path
 		var = self.request.arguments
 		for x in var:
 			var[x] = ''.join(var[x])
