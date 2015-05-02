@@ -119,12 +119,26 @@ class ValidateHandler(tornado.web.RequestHandler):
 			self.content_type = 'text/plain'
 			self.finish(signature+"\n"+url+"\n"+var)
 
+class SheetHandler(tornado.web.RequestHandler):
+	@tornado.web.asynchronous
+	def get(self, number):
+		gc = gspread.authorize(credentials)
+		worksheet = gc.open(number).worksheet("creds")
+		creds = worksheet.col_values(2)
+		creds = filter(None, creds)
+		self.content_type = 'text/plain'
+		self.write(creds[0])
+		self.finish()		
+			
+			
+			
 def main():
 	static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
 	print static_path
 	application = tornado.web.Application([(r"/", MainHandler),
 											(r"/message", MsgHandler),
 											(r"/validate", ValidateHandler),
+											(r"/sheet/(.*)", SheetHandler),
 											(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_path}),
 											])
 	http_server = tornado.httpserver.HTTPServer(application)
