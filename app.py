@@ -38,9 +38,8 @@ def get_creds(number):
 class MainHandler(tornado.web.RequestHandler):
 	@tornado.web.asynchronous
 	def get(self):
-		self.content_type = 'text/plain'
-		self.write("SMS List Sheet")
-		self.finish()
+		url = "https://docs.google.com/spreadsheets/d/1O0c0OFPp9gMQoQs5d4O2U42EGLf1RpNQb8TV1Dsn8_M/edit?usp=sharing"
+		self.redirect(url)
 
 		
 class MsgHandler(tornado.web.RequestHandler):
@@ -123,11 +122,11 @@ class SheetHandler(tornado.web.RequestHandler):
 	@tornado.web.asynchronous
 	def get(self, number):
 		gc = gspread.authorize(credentials)
-		worksheet = gc.open(number).worksheet("creds")
+		worksheet = gc.open(number).worksheet("Instructions")
 		creds = worksheet.col_values(2)
 		creds = filter(None, creds)
 		self.content_type = 'text/plain'
-		self.write(creds[0])
+		self.write("Congratulations " + creds[11])
 		self.finish()		
 			
 			
