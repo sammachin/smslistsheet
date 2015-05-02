@@ -96,6 +96,7 @@ class ValidateHandler(tornado.web.RequestHandler):
 	@tornado.web.asynchronous
 	def post(self):
 		signature = self.request.headers.get('X-Twilio-Signature')
+		print 
 		url = self.request.protocol + "://" + self.request.host + self.request.path
 		var = self.request.arguments
 		for x in var:
@@ -109,10 +110,11 @@ class ValidateHandler(tornado.web.RequestHandler):
 			self.write(str(r))
 			self.finish()
 		else:
-			r = twiml.Response()
-			r.say("Request Validation Failed")
-			self.content_type = 'text/xml'
-			self.write(str(r))
+			self.clear()
+			self.set_status(403)
+			self.write(signature+"\n")
+			self.write(url+"\n")
+			self.write(var)
 			self.finish()
 
 def main():
