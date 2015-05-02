@@ -50,7 +50,8 @@ class MsgHandler(tornado.web.RequestHandler):
 		sender = self.get_argument("From").lstrip("+")
 		number = self.get_argument("To").lstrip("+")
 		signature = self.request.headers.get('X-Twilio-Signature')
-		url = self.request.protocol + "://" + self.request.host + self.request.path
+		proto = self.request.headers.get('X-Forwarded-Proto', self.request.protocol ) 
+		url = proto +"://" + self.request.host + self.request.path
 		var = self.request.arguments
 		for x in var:
 			var[x] = ''.join(var[x])
@@ -92,37 +93,12 @@ class MsgHandler(tornado.web.RequestHandler):
 			
 
 
-class ValidateHandler(tornado.web.RequestHandler):
-	@tornado.web.asynchronous
-	def post(self):
-		signature = self.request.headers.get('X-Twilio-Signature')
-		proto = self.request.headers.get('X-Forwarded-Proto', self.request.protocol ) 
-		url = proto +"://" + self.request.host + self.request.path
-		var = self.request.arguments
-		for x in var:
-			var[x] = ''.join(var[x])
-		token = "b66cc1f276e50a849da90c9a864cf046"
-		validator = RequestValidator(token)
-		if validator.validate(url, var, signature):
-			r = twiml.Response()
-			r.say("Request Validation Passed")
-			self.content_type = 'text/xml'
-			self.write(str(r))
-			self.finish()
-		else:
-			self.clear()
-			self.set_status(403)
-			self.write(signature+"\n")
-			self.write(url+"\n")
-			self.write(var)
-			self.finish()
 
 def main():
 	static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
 	print static_path
 	application = tornado.web.Application([(r"/", MainHandler),
 											(r"/message", MsgHandler),
-											(r"/validate", ValidateHandler),
 											(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_path}),
 											])
 	http_server = tornado.httpserver.HTTPServer(application)
